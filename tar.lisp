@@ -365,7 +365,8 @@
 (defun read-tar-entry-from-buffer (buffer &key (start 0))
   (with-extracted-fields (tar-header buffer start
                                      %name mode mtime size checksum uid
-                                     gid magic typeflag uname gname)
+                                     gid magic typeflag uname gname
+                                     linkname)
     (multiple-value-bind (validp computed)
         (tar-block-checksum-matches-p buffer checksum start)
       (unless validp
@@ -382,7 +383,8 @@
                      :magic magic
                      :typeflag typeflag
                      :uname uname
-                     :gname gname))))
+                     :gname gname
+                     :linkname linkname))))
 
 
 ;;; buffering data from the archive's stream
@@ -443,14 +445,15 @@
     (cond
       ((= (typeflag entry) +tar-directory-file+)
        (ensure-directories-exist name))
-      ((or (= (typeflag entry) +tar-regular-file+)
-           (= (typeflag entry) +tar-hard-link+)
-           (= (typeflag entry) +tar-symbolic-link+))
+      ((= (typeflag entry) +tar-regular-file+)
        (ensure-directories-exist name)
        (with-open-file (stream name :direction :output
                                :if-exists :supersede
                                :element-type '(unsigned-byte 8))
          (transfer-entry-data-to-stream archive entry stream)))
+      ((= (typeflag entry) +tar-symbolic-link+)
+       ;; Need to make a symbolic link
+       (make-symlink (bytevec-to-string (linkname entry)) name))
       (t
        (error 'unhandled-extract-entry-error :typeflag (typeflag entry))))))
 

@@ -189,3 +189,9 @@
   #+clisp (posix:file-stat-nlink stat)
   #+cmucl (nlink stat)
   #-(or sbcl lispworks clisp cmucl) (error "Not implemented"))
+
+
+;;; Symlinks
+(defun make-symlink (old-path new-path)
+  #+sbcl (sb-posix:symlink old-path new-path)
+  #-(or sbcl) (error "Not implemented"))
