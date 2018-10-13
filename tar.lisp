@@ -183,7 +183,7 @@
             (zerop (aref prefix 0)))    ; no prefix given
         (bytevec-to-string (%name entry))
         (bytevec-to-string (concatenate '(vector (unsigned-byte 8))
-                                        prefix (%name entry))))))
+                                        prefix #(47) (%name entry))))))
 
 (defmethod (setf name) (value (entry tar-entry))
   ;;; FIXME: need to handle `PREFIX' correctly too.
@@ -366,7 +366,7 @@
   (with-extracted-fields (tar-header buffer start
                                      %name mode mtime size checksum uid
                                      gid magic typeflag uname gname
-                                     linkname)
+                                     linkname %prefix)
     (multiple-value-bind (validp computed)
         (tar-block-checksum-matches-p buffer checksum start)
       (unless validp
@@ -384,7 +384,8 @@
                      :typeflag typeflag
                      :uname uname
                      :gname gname
-                     :linkname linkname))))
+                     :linkname linkname
+                     :%prefix %prefix))))
 
 
 ;;; buffering data from the archive's stream
