@@ -193,5 +193,5 @@
 
 ;;; Symlinks
 (defun make-symlink (old-path new-path)
-  #+sbcl (sb-posix:symlink old-path new-path)
-  #-(or sbcl) (error "Not implemented"))
+  #+(and sbcl (not win32)) (sb-posix:symlink old-path new-path)
+  #-(or sbcl (and sbcl win32)) (error "Not implemented"))
